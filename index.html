@@ -32,7 +32,8 @@ const draw=_=>{
 const step=_=>{ if(!A.length||q.textContent==="ALL DONE") return; if(!show){show=1;draw();return;} show=0; i++; draw(); };
 const mark=done=>{
   if(!A.length||q.textContent==="ALL DONE") return;
-  done?D.add(q.textContent):D.delete(q.textContent); save(); show=0; draw();
+  done?D.add(q.textContent):D.delete(q.textContent); save();
+  show=0; i++; draw();   // ←ここで次へ進む
 };
 st.onclick=_=>{A=P(src.value);i=0;show=0;draw();};
 sh.onclick=_=>{A=P(src.value);S();i=0;show=0;draw();};

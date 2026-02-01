@@ -1,43 +1,38 @@
 <!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Flash</title>
 <style>
-body{font-family:system-ui;margin:0}.w{max-width:720px;margin:auto;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
+body{font-family:system-ui;margin:0}.w{max-width:720px;margin:auto;padding:14px}
 textarea,button{width:100%;font-size:16px;padding:12px;border:1px solid #ddd;border-radius:12px}
 .r{display:flex;gap:10px;margin:10px 0}.r>*{flex:1}
 #c{border:1px solid #ddd;border-radius:18px;padding:18px;min-height:45vh;display:flex;flex-direction:column;justify-content:center}
-#q{font-size:34px;font-weight:800;line-height:1.15} #a{font-size:20px;margin-top:14px;opacity:.9} #p{margin-top:10px;opacity:.65}
+#q{font-size:34px;font-weight:800} #a{font-size:20px;margin-top:14px;opacity:.9} #p{margin-top:10px;opacity:.65}
 </style>
 
 <div class="w">
-  <textarea id="src" rows="6" placeholder="貼る（word：meaning）"></textarea>
+  <textarea id="src" rows="6" placeholder="word：meaning を貼る"></textarea>
   <div class="r"><button id="st">START</button><button id="sh">SHUFFLE</button></div>
   <div id="c"><div id="q">—</div><div id="a">貼ってSTART</div><div id="p"></div></div>
   <div class="r"><button id="ng">まだ</button><button id="ok">覚えた</button></div>
 </div>
 
 <script>
-const K="flash_done_v1"; let A=[],U=[],i=0,show=0,D=new Set(JSON.parse(localStorage.getItem(K)||"[]"));
-const P=t=>t.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map(s=>{const k=s.indexOf("：");return k>0?{w:s.slice(0,k).trim(),m:s.slice(k+1).trim()}:0}).filter(Boolean);
-const S=_=>{for(let j=A.length-1;j>0;j--){const k=(Math.random()*(j+1))|0;[A[j],A[k]]=[A[k],A[j]];}};
-const save=_=>localStorage.setItem(K,JSON.stringify([...D]));
-const rebuild=_=>U=A.filter(c=>!D.has(c.w));
+const KD="f_done",KS="f_src";
+let A=[],i=0,show=0,D=new Set(JSON.parse(localStorage.getItem(KD)||"[]"));
+const P=t=>t.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map(s=>{let k=s.indexOf("：");return k>0?{w:s.slice(0,k).trim(),m:s.slice(k+1).trim()}:0}).filter(Boolean);
+const S=_=>{for(let j=A.length-1;j>0;j--){let k=(Math.random()*(j+1))|0;[A[j],A[k]]=[A[k],A[j]];}};
+const save=_=>localStorage.setItem(KD,JSON.stringify([...D]));
+const U=_=>A.filter(x=>!D.has(x.w));
 const draw=_=>{
   if(!A.length){q.textContent="—";a.textContent="貼ってSTART";p.textContent="";return;}
-  rebuild();
-  if(!U.length){q.textContent="ALL DONE";a.textContent="SHUFFLE/STARTで続ける";p.textContent=`覚えた ${D.size}/${A.length}`;return;}
-  if(i>=U.length) i=0;
-  const c=U[i]; q.textContent=c.w; a.textContent=show?c.m:"（タップで答え）";
-  p.textContent=`残り ${U.length} / 全 ${A.length}（覚えた ${D.size}）`;
+  let u=U(); if(!u.length){q.textContent="ALL DONE";a.textContent="START/SHUFFLEで続ける";p.textContent=`覚えた ${D.size}/${A.length}`;return;}
+  if(i>=u.length) i=0; let c=u[i];
+  q.textContent=c.w; a.textContent=show?c.m:"（タップで答え）";
+  p.textContent=`残り ${u.length}/${A.length}（覚えた ${D.size}）`;
 };
-const step=_=>{ if(!A.length||q.textContent==="ALL DONE") return; if(!show){show=1;draw();return;} show=0; i++; draw(); };
-const mark=done=>{
-  if(!A.length||q.textContent==="ALL DONE") return;
-  done?D.add(q.textContent):D.delete(q.textContent); save();
-  show=0; i++; draw();   // ←ここで次へ進む
-};
-st.onclick=_=>{A=P(src.value);i=0;show=0;draw();};
-sh.onclick=_=>{A=P(src.value);S();i=0;show=0;draw();};
-c.onclick=step; document.addEventListener("keydown",e=>{if(e.code==="Space"){e.preventDefault();step();}});
-ok.onclick=_=>mark(1); ng.onclick=_=>mark(0);
-draw();
+const step=_=>{if(!A.length||q.textContent==="ALL DONE")return; if(!show){show=1;draw();return;} show=0;i++;draw();};
+const mark=done=>{if(!A.length||q.textContent==="ALL DONE")return; done?D.add(q.textContent):D.delete(q.textContent);save();show=0;i++;draw();};
+st.onclick=_=>{localStorage.setItem(KS,src.value);A=P(src.value);i=0;show=0;draw();};
+sh.onclick=_=>{localStorage.setItem(KS,src.value);A=P(src.value);S();i=0;show=0;draw();};
+c.onclick=step; ok.onclick=_=>mark(1); ng.onclick=_=>mark(0);
+let t=localStorage.getItem(KS); if(t){src.value=t;A=P(t);} draw();
 </script>

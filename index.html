@@ -1,79 +1,42 @@
-<!doctype html><meta charset="utf-8" />
-<title>Flash Vocab</title>
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Flash</title>
 <style>
-  body{font-family:system-ui;margin:16px;max-width:760px}
-  textarea,button{font-size:16px;width:100%}
-  #card{
-    margin-top:12px; padding:18px; border:1px solid #ddd; border-radius:14px;
-    min-height:180px; display:flex; flex-direction:column; justify-content:center;
-    user-select:none; -webkit-user-select:none;
-  }
-  #w{font-size:30px; font-weight:700; margin-bottom:10px}
-  #m{font-size:20px; opacity:.92}
-  #hint{margin-top:10px; opacity:.65}
-  .row{display:flex; gap:8px; margin-top:8px}
-  .row>*{flex:1}
+  body{font-family:system-ui;margin:0;background:#fff}
+  .wrap{padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom));max-width:720px;margin:auto}
+  textarea,button{width:100%;font-size:16px;padding:12px;border:1px solid #ddd;border-radius:12px}
+  .row{display:flex;gap:10px;margin:10px 0} .row>*{flex:1}
+  #card{margin-top:10px;border:1px solid #ddd;border-radius:18px;padding:18px;min-height:45vh;display:flex;flex-direction:column;justify-content:center}
+  #w{font-size:34px;font-weight:800;line-height:1.15}
+  #m{font-size:20px;margin-top:14px;opacity:.9}
+  #p{margin-top:10px;opacity:.65}
 </style>
 
-<textarea id="src" rows="10" placeholder="ここに貼り付け（word：meaning）"></textarea>
-<div class="row">
-  <button id="start">START</button>
-  <button id="shuffle">SHUFFLE</button>
-</div>
+<div class="wrap">
+  <textarea id="src" rows="6" placeholder="ここに貼る（word：meaning）"></textarea>
+  <div class="row">
+    <button id="start">START</button>
+    <button id="shuf">SHUFFLE</button>
+  </div>
 
-<div id="card" title="タップでめくる / スペースでもOK">
-  <div id="w">—</div>
-  <div id="m"></div>
-  <div id="hint">STARTして、カードをタップで「答え→次」</div>
+  <div id="card">
+    <div id="w">—</div>
+    <div id="m">貼ってSTART</div>
+    <div id="p"></div>
+  </div>
 </div>
 
 <script>
-let cards=[], i=0, showing=false;
-
-const parse = t => t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{
-  const [w,m]=l.split("：");
-  return (w&&m)?{w:w.trim(), m:m.trim()}:null;
+let a=[], i=0, show=0;
+const parse=t=>t.split(/\r?\n/).map(s=>s.trim()).filter(Boolean).map(s=>{
+  const k=s.indexOf("："); return k>0?{w:s.slice(0,k).trim(),m:s.slice(k+1).trim()}:null
 }).filter(Boolean);
+const draw=()=>{ if(!a.length){w.textContent="—";m.textContent="貼ってSTART";p.textContent="";return;}
+  const c=a[i]; w.textContent=c.w; m.textContent=show?c.m:"（タップで答え）"; p.textContent=`${i+1}/${a.length}`; };
+const next=()=>{ if(!a.length) return; if(!show){show=1;draw();return;} show=0; i=(i+1)%a.length; draw(); };
+const shuffle=()=>{ for(let j=a.length-1;j>0;j--){const k=(Math.random()*(j+1))|0; [a[j],a[k]]=[a[k],a[j]];} };
 
-function render(){
-  if(!cards.length){ w.textContent="—"; m.textContent=""; hint.textContent="リストを貼ってSTART"; return; }
-  const c = cards[i];
-  w.textContent = c.w;
-  m.textContent = showing ? c.m : "（タップで答え）";
-  hint.textContent = `progress: ${i+1}/${cards.length}  |  ${showing?"次へ":"答えを見る"}`;
-}
-
-function next(){
-  if(!cards.length) return;
-  if(!showing){ showing=true; render(); return; }
-  showing=false;
-  i = (i+1) % cards.length;
-  render();
-}
-
-function doShuffle(){
-  for(let j=cards.length-1;j>0;j--){
-    const k = (Math.random()*(j+1))|0;
-    [cards[j],cards[k]]=[cards[k],cards[j]];
-  }
-}
-
-start.onclick=()=>{
-  cards=parse(src.value);
-  i=0; showing=false;
-  render();
-};
-
-shuffle.onclick=()=>{
-  if(!cards.length) cards=parse(src.value);
-  doShuffle();
-  i=0; showing=false;
-  render();
-};
-
-card.onclick=next;
-document.addEventListener("keydown",e=>{
-  if(e.code==="Space"){ e.preventDefault(); next(); }
-});
-render();
+start.onclick=()=>{a=parse(src.value); i=0; show=0; draw();};
+shuf.onclick=()=>{a=parse(src.value); shuffle(); i=0; show=0; draw();};
+card.onclick=next; document.addEventListener("keydown",e=>{ if(e.code==="Space"){e.preventDefault();next();}});
+draw();
 </script>
